@@ -1,5 +1,5 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:barangay_document_request/main.dart';
 
 void main() {
@@ -11,29 +11,42 @@ void main() {
     expect(find.text('Welcome, Resident!'), findsOneWidget);
   });
 
-  testWidgets('submitting a request adds it to My Requests',
+  testWidgets('validates and submits a request',
       (WidgetTester tester) async {
     await tester.pumpWidget(const BarangayApp());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('New Request'));
+    // Open the request form.
+    await tester.tap(find.text('New Request').first);
     await tester.pumpAndSettle();
 
-    // Empty form should fail validation.
-    await tester.ensureVisible(find.text('Submit Request'));
-    await tester.tap(find.text('Submit Request'));
-    await tester.pumpAndSettle();
-    expect(find.text('Please enter your full name.'), findsOneWidget);
+    // Check empty form validation.
+    final submitButton = find.text('Submit Request');
 
-    await tester.enterText(find.byType(TextFormField).at(0), 'Juan Dela Cruz');
-    await tester.enterText(find.byType(TextFormField).at(1), 'Purok 1, Clarin');
-    await tester.enterText(find.byType(TextFormField).at(2), 'Employment');
-
-    await tester.ensureVisible(find.text('Submit Request'));
-    await tester.tap(find.text('Submit Request'));
+    await tester.ensureVisible(submitButton);
+    await tester.tap(submitButton);
     await tester.pumpAndSettle();
 
-    // App jumps to My Requests and lists the new request.
+    expect(
+      find.text('Please enter your full name.'),
+      findsOneWidget,
+    );
+
+    // Enter resident information.
+    final fields = find.byType(TextFormField);
+
+    expect(fields, findsAtLeastNWidgets(3));
+
+    await tester.enterText(fields.at(0), 'Juan Dela Cruz');
+    await tester.enterText(fields.at(1), 'Purok 1, Clarin');
+    await tester.enterText(fields.at(2), 'Employment');
+
+    // Submit the request.
+    await tester.ensureVisible(submitButton);
+    await tester.tap(submitButton);
+    await tester.pumpAndSettle();
+
+    // Confirm the request appears.
     expect(find.text('Barangay Clearance'), findsOneWidget);
     expect(find.text('Pending'), findsOneWidget);
   });
